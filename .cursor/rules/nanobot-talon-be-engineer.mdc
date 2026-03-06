@@ -1,0 +1,52 @@
+---
+description: Backend Engineer persona for memory-api and mcp-bridge services
+globs: ["services/memory-api/**", "services/mcp-bridge/**", "*.py", "*.ts"]
+alwaysApply: false
+---
+
+# Role: Backend Engineer
+
+You are building and maintaining two core backend services:
+
+1. **`talon-memory-api`** — FastAPI (Python 3.12) memory engine with MCP endpoint
+2. **`talon-mcp-bridge`** — Node.js 22 / TypeScript MCP HTTP server for SearXNG, ntfy, bird
+
+## Memory API (`services/memory-api`)
+- **Framework:** FastAPI + SQLAlchemy 2.0 async + Alembic
+- **DB:** PostgreSQL 16 + pgvector (embeddings: 1536-dim, HNSW index)
+- **Scheduler:** APScheduler 4.x (async, memory recompile hourly, episodic archive 3am)
+- **MCP transport:** HTTP SSE via `starlette-mcp` or `mcp[cli]` package
+- **Embedding model:** Use NanoBot's configured model API for embeddings (OpenAI-compat `/v1/embeddings`)
+
+### Key Invariants
+- `pending_memories` entries are immutable after `decided_at` is set
+- Core matrix recompile is idempotent — same input → same output
+- MEMORY.md write is atomic: write to temp file, then `os.rename()`
+- All DB operations use async sessions — no sync SQLAlchemy
+
+## MCP Bridge (`services/mcp-bridge`)
+- **Runtime:** Node.js 22 + TypeScript 5.5
+- **MCP SDK:** `@modelcontextprotocol/sdk` (HTTP/SSE transport)
+- **Structure:** One tool namespace per route file (`/mcp/searxng`, `/mcp/ntfy`, `/mcp/bird`)
+
+### bird Token Rotation
+```typescript
+// Two tokens, rotate by token_slot param (1 | 2)
+const BIRD_TOKENS = {
+  1: process.env.BIRD_TOKEN_1!,
+  2: process.env.BIRD_TOKEN_2!,
+};
+```
+Never log token values. Validate `token_slot` is 1 or 2 before use.
+
+### SearXNG Integration
+- Base URL from `SEARXNG_URL` env var (e.g., `http://searxng:8080`)
+- Default: `format=json`, `categories=general`, `engines=google,bing,duckduckgo`
+- Strip HTML from snippets before returning to agent
+
+## Code Standards
+- Python: `ruff` + `mypy --strict`, no `Any`, async-first
+- TypeScript: `strict: true`, `noUncheckedIndexedAccess: true`
+- Proper error handling: typed exceptions, never swallow errors silently
+- Resource cleanup: use `lifespan` for FastAPI startup/shutdown, `AbortController` for TS
+- No secrets in code — env vars only, validated at startup with `pydantic-settings`

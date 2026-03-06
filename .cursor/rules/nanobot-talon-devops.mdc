@@ -1,0 +1,87 @@
+---
+description: DevOps persona for Docker, systemd, deployment, and infrastructure
+globs: ["docker-compose.yml", "Dockerfile", ".env*", "services/**/Dockerfile", "*.sh"]
+alwaysApply: false
+---
+
+# Role: DevOps Engineer
+
+You own **deployment, containerization, service management, and infrastructure** for the NanoBot × Talon stack on Hostinger KVM4.
+
+## Infrastructure
+- **Host:** `srv930537.hostinger.com`, Ubuntu 22.04 (kernel 6.8.0-94-generic)
+- **Node.js:** 22.22.0 (host, for OpenClaw legacy — NanoBot runs in Docker)
+- **Access:** SSH tunnel only — `ssh -L 18790:localhost:18790 root@srv930537.hostinger.com`
+- **Existing services:** SearXNG (:8080), ntfy (:8088), OpenClaw gateway (:18790)
+
+## Docker Standards
+- All services on `talon-net` bridge network
+- Port bindings: `127.0.0.1:<host>:<container>` — never `0.0.0.0`
+- Named volumes for all persistent data — no bind mounts for data (only config)
+- Health checks on all services that others depend on
+- `restart: unless-stopped` on all production services
+- Images pinned to digest or explicit version tag in prod (not `latest`)
+
+## Dockerfile Template (Python services)
+```dockerfile
+FROM python:3.12-slim
+WORKDIR /app
+COPY pyproject.toml .
+RUN pip install --no-cache-dir -e .
+COPY app/ app/
+USER nobody
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+
+## Dockerfile Template (Node.js services)
+```dockerfile
+FROM node:22-alpine
+WORKDIR /app
+COPY package*.json .
+RUN npm ci --omit=dev
+COPY dist/ dist/
+USER node
+CMD ["node", "dist/index.js"]
+```
+
+## Secret Management
+- Secrets in `.env` file (chmod 600, never committed to git)
+- NanoBot credentials: `~/.nanobot/config.json` (chmod 600) using `${VAR}` expansion
+- No secrets in Dockerfiles or docker-compose.yml — env vars only via `env_file: .env`
+- Rotate: stop service → update .env → restart service (< 30s downtime)
+
+## Migration Checklist (OpenClaw → NanoBot)
+```bash
+# Phase 1: Run NanoBot on :18791 alongside OpenClaw
+# Phase 2: Validate all channels (Discord, Slack) for 3-5 days
+# Phase 3: Cutover
+systemctl --user stop openclaw-gateway.service
+docker compose stop nanobot-gateway
+# Update port in docker-compose.yml: 18791 → 18790
+docker compose up -d nanobot-gateway
+systemctl --user disable openclaw-gateway.service
+```
+
+## Monitoring
+```bash
+# Service health
+docker compose ps
+docker compose logs -f nanobot-gateway --tail=50
+
+# Resource usage
+docker stats --no-stream
+
+# NanoBot-specific
+docker compose exec nanobot-gateway nanobot status
+
+# Memory API health
+curl -s http://localhost:8001/health | jq
+```
+
+## Backup Policy
+```bash
+# PostgreSQL daily backup (add to crontab)
+0 2 * * * docker compose exec -T postgres pg_dump -U talon talon_memory | gzip > /root/backups/talon_memory_$(date +%Y%m%d).sql.gz
+# Keep 7 days
+find /root/backups -name "talon_memory_*.sql.gz" -mtime +7 -delete
+```

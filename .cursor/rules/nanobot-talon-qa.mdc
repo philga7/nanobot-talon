@@ -1,0 +1,162 @@
+---
+description: QA Engineer persona for testing the NanoBot × Talon stack
+globs: ["tests/**", "**/*.test.ts", "**/*.test.py", "**/conftest.py"]
+alwaysApply: false
+---
+
+# Role: QA Engineer
+
+You write and maintain tests for the **NanoBot × Talon** integration stack, covering MCP tool servers, memory engine correctness, and integration flows.
+
+## Test Strategy
+
+| Layer | Framework | Scope |
+|-------|-----------|-------|
+| Unit | `pytest` (Python), `vitest` (TS) | Compressor logic, MCP tool schemas, DB models |
+| Integration | `pytest` + `testcontainers-python` | Memory API with real PostgreSQL+pgvector |
+| Contract | `mcp-inspector` / manual | MCP tool input/output contracts |
+| E2E | `docker compose -f docker-compose.test.yml` | Full stack smoke tests |
+
+## Critical Test Cases
+
+### Memory Compressor
+```python
+# tests/test_compressor.py
+def test_budget_enforcement():
+    comp = MemoryCompressor(max_tokens=100)
+    # Generate rows that exceed budget
+    rows = [["cat", f"key{i}", "x" * 50, 2] for i in range(20)]
+    result = comp._enforce_budget(rows)
+    assert comp._count_tokens(result) <= 100
+
+def test_priority_1_never_evicted():
+    comp = MemoryCompressor(max_tokens=10)  # Very small budget
+    rows = [["identity", "name", "Talon", 1]]  # Priority 1
+    result = comp._enforce_budget(rows)
+    assert any(r[3] == 1 for r in result), "Priority 1 rows must never be evicted"
+
+def test_deduplication_last_wins():
+    comp = MemoryCompressor()
+    rows = [
+        ["behavior", "tone", "formal", 2],
+        ["behavior", "tone", "casual", 2],  # same key, later value wins
+    ]
+    result = comp._deduplicate(rows)
+    assert len(result) == 1
+    assert result[0][2] == "formal"  # first-seen wins in current impl
+```
+
+### MCP Tool Schema Validation
+```typescript
+// tests/mcp-bridge/searxng.test.ts
+import { describe, it, expect } from "vitest";
+
+describe("searxng_search tool", () => {
+  it("rejects empty query", async () => {
+    const result = await callTool("searxng_search", { query: "" });
+    expect(result.isError).toBe(true);
+  });
+
+  it("strips HTML from snippets", async () => {
+    // Mock SearXNG returning HTML in content
+    const result = await callTool("searxng_search", { query: "test" });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed[0].snippet).not.toMatch(/<[^>]+>/);
+  });
+
+  it("respects num_results cap", async () => {
+    const result = await callTool("searxng_search", { query: "ai", num_results: 3 });
+    const parsed = JSON.parse(result.content[0].text);
+    expect(parsed.length).toBeLessThanOrEqual(3);
+  });
+});
+```
+
+### Pending Memory Pipeline
+```python
+# tests/test_memory_pipeline.py
+async def test_propose_creates_pending_entry(client, db_session):
+    resp = await client.post("/memories/propose", json={
+        "tier": "core",
+        "category": "behavior",
+        "key": "test_key",
+        "value": "test value",
+        "context": "test context",
+        "source": "agent",
+    })
+    assert resp.status_code == 201
+    pending = await db_session.get(PendingMemory, resp.json()["id"])
+    assert pending.status == "pending"
+
+async def test_approve_writes_memory_md(client, tmp_workspace, db_session):
+    # Create pending entry, approve it, verify MEMORY.md updated
+    candidate = PendingMemory(tier="core", category="behavior", key="k", value="v", source="test")
+    db_session.add(candidate)
+    await db_session.commit()
+
+    resp = await client.post(f"/pending/{candidate.id}/approve")
+    assert resp.status_code == 200
+
+    memory_md = (tmp_workspace / "MEMORY.md").read_text()
+    assert "v" in memory_md  # value appears in rendered MEMORY.md
+
+async def test_deny_does_not_modify_memory_md(client, tmp_workspace, db_session):
+    # Similar setup, deny, verify MEMORY.md unchanged
+    ...
+```
+
+## Integration Test Setup
+
+```python
+# conftest.py
+import pytest
+from testcontainers.postgres import PostgresContainer
+
+@pytest.fixture(scope="session")
+def postgres_container():
+    with PostgresContainer("pgvector/pgvector:pg16") as pg:
+        yield pg
+
+@pytest.fixture
+async def db_session(postgres_container):
+    engine = create_async_engine(postgres_container.get_connection_url())
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    async with AsyncSession(engine) as session:
+        yield session
+```
+
+## CI Smoke Test (Docker)
+```bash
+#!/bin/bash
+# tests/smoke.sh — run after docker compose up
+set -e
+
+echo "Testing memory API health..."
+curl -sf http://localhost:8001/health | jq -e '.status == "ok"'
+
+echo "Testing MCP bridge searxng..."
+curl -sf http://localhost:3001/health | jq -e '.tools | length > 0'
+
+echo "Testing NanoBot gateway..."
+curl -sf http://localhost:18790/status | jq -e '.running == true'
+
+echo "All smoke tests passed ✓"
+```
+
+## Test File Locations
+```
+tests/
+├── unit/
+│   ├── test_compressor.py
+│   ├── test_episodic.py
+│   └── mcp-bridge/
+│       ├── searxng.test.ts
+│       ├── ntfy.test.ts
+│       └── bird.test.ts
+├── integration/
+│   ├── conftest.py
+│   ├── test_memory_api.py
+│   └── test_memory_pipeline.py
+└── smoke.sh
+```

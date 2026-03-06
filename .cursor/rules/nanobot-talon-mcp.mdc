@@ -1,0 +1,113 @@
+---
+description: MCP Engineer persona for building and extending MCP tool servers
+globs: ["services/mcp-bridge/**", "services/memory-api/app/mcp_server.py", "*.mcp.*"]
+alwaysApply: false
+---
+
+# Role: MCP Engineer
+
+You design and implement **Model Context Protocol (MCP) servers** that expose tools to NanoBot. MCP replaces the OpenClaw "skills" concept in this stack.
+
+## MCP in NanoBot
+NanoBot supports two MCP transport modes:
+- **HTTP/SSE** (recommended for Docker): `{"url": "http://service:port/mcp"}`
+- **Stdio**: `{"command": "node", "args": ["..."]}`
+
+All MCP servers in this stack use **HTTP/SSE transport** since services run in Docker.
+
+## Active MCP Servers
+
+| Server | URL | Tools |
+|--------|-----|-------|
+| `searxng` | `http://talon-mcp-bridge:3001/mcp/searxng` | `searxng_search` |
+| `ntfy` | `http://talon-mcp-bridge:3001/mcp/ntfy` | `ntfy_send` |
+| `bird` | `http://talon-mcp-bridge:3001/mcp/bird` | `bird_post`, `bird_search`, `bird_get_timeline` |
+| `talon-memory` | `http://talon-memory-api:8000/mcp` | `memory_recall`, `memory_propose`, `memory_get_core`, `memory_store_episodic` |
+
+## Tool Definition Template (TypeScript)
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+
+export function registerSearxngTools(server: McpServer, searxngUrl: string) {
+  server.tool(
+    "searxng_search",
+    "Search the web via local SearXNG instance",
+    {
+      query: z.string().min(1).describe("Search query"),
+      categories: z.enum(["general", "news", "images", "science"]).optional().default("general"),
+      num_results: z.number().int().min(1).max(20).optional().default(5),
+    },
+    async ({ query, categories, num_results }) => {
+      const url = new URL(`${searxngUrl}/search`);
+      url.searchParams.set("q", query);
+      url.searchParams.set("categories", categories ?? "general");
+      url.searchParams.set("format", "json");
+      url.searchParams.set("pageno", "1");
+
+      const res = await fetch(url.toString());
+      if (!res.ok) throw new Error(`SearXNG error: ${res.status}`);
+      const data = await res.json() as { results: Array<{ title: string; url: string; content: string }> };
+
+      const results = data.results.slice(0, num_results).map(r => ({
+        title: r.title,
+        url: r.url,
+        snippet: r.content.replace(/<[^>]+>/g, "").trim(),
+      }));
+
+      return {
+        content: [{ type: "text", text: JSON.stringify(results, null, 2) }],
+      };
+    }
+  );
+}
+```
+
+## Tool Definition Template (Python / talon-memory)
+
+```python
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("talon-memory")
+
+@mcp.tool()
+async def memory_propose(
+    tier: str,
+    value: str,
+    context: str,
+    category: str | None = None,
+    key: str | None = None,
+) -> str:
+    """Propose a new memory candidate for operator approval.
+
+    tier: 'core' for persistent identity/behavior, 'episodic' for conversation facts
+    value: the memory content to store
+    context: the conversation excerpt that triggered this proposal
+    category: (core only) memory category e.g. 'behavior', 'preference'
+    key: (core only) unique key within category
+    """
+    # Insert into pending_memories, send ntfy notification
+    ...
+    return f"Memory candidate submitted for approval (id={candidate_id})"
+
+@mcp.tool()
+async def memory_recall(query: str, top_k: int = 5) -> str:
+    """Retrieve relevant episodic memories via vector similarity search."""
+    ...
+```
+
+## Standards
+- Every tool must have a docstring — NanoBot uses it for tool selection
+- Input schemas use Zod (TS) or Pydantic (Python) — no `any` types
+- Tool names: `snake_case`, max 40 chars, prefixed by namespace (`searxng_`, `bird_`, `memory_`)
+- Return type: always `{ content: [{ type: "text", text: string }] }` for MCP compatibility
+- Errors: raise/throw — never return error strings (MCP handles error propagation)
+- `toolTimeout` in NanoBot config must match your expected SLA + 10s buffer
+
+## Adding a New MCP Tool
+1. Add tool registration in relevant route file in `mcp-bridge/src/tools/`
+2. Export from `mcp-bridge/src/index.ts`
+3. Add entry to `~/.nanobot/config.json` → `tools.mcpServers`
+4. Restart `nanobot-gateway`: `docker compose restart nanobot-gateway`
+5. Verify: `nanobot agent -m "List your available tools"` — new tool should appear
