@@ -9,13 +9,14 @@ always: true
 ## Structure
 
 - `memory/MEMORY.md` — Long-term memory loaded into context.
-- `memory/HISTORY.md` — Append-only event log. NOT loaded into context. Each entry starts with `[YYYY-MM-DD HH:MM]`.
+- `memory/HISTORY.md` — Append-only event log. NOT loaded into context. In Talon mode, treat it as a legacy compatibility/audit file rather than authoritative memory.
 
 ## Ownership Rules
 
 - Session history is your working memory for the current conversation.
 - Do not claim that you own or directly manage long-term memory.
 - If the runtime indicates Talon mode or externally managed memory, treat `memory/MEMORY.md` as read-only generated state.
+- In Talon mode, treat external episodic memory as authoritative instead of `memory/HISTORY.md`.
 - In Talon mode, do not tell the user you will rewrite `MEMORY.md`.
 
 ## Search Past Events
@@ -37,4 +38,4 @@ Use the `exec` tool to run grep. Combine patterns: `grep -iE "meeting|deadline" 
 
 ## Auto-consolidation
 
-In native mode, older conversations may be consolidated into persistent memory automatically. In Talon mode, long-term memory is managed outside this agent.
+In native mode, older conversations may be consolidated into persistent memory automatically. In Talon mode, long-term memory is managed outside this agent and `HISTORY.md` is only a compatibility artifact if it exists.

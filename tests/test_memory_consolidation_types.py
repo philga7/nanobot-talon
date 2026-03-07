@@ -46,6 +46,15 @@ def _make_tool_response(history_entry, memory_update):
 class TestMemoryConsolidationTypeHandling:
     """Test that consolidation handles various argument types correctly."""
 
+    def test_talon_mode_preserves_generated_memory_file(self, tmp_path: Path) -> None:
+        """Direct native writes should not overwrite externally rendered memory in Talon mode."""
+        store = MemoryStore(tmp_path, talon_mode=True)
+        store.memory_file.write_text("# Generated\nFrom Talon.\n", encoding="utf-8")
+
+        store.write_long_term("# Native\nShould not replace.\n")
+
+        assert store.memory_file.read_text(encoding="utf-8") == "# Generated\nFrom Talon.\n"
+
     @pytest.mark.asyncio
     async def test_string_arguments_work(self, tmp_path: Path) -> None:
         """Normal case: LLM returns string arguments."""
