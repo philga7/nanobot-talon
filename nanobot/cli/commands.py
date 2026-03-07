@@ -9,6 +9,7 @@ from pathlib import Path
 
 # Force UTF-8 encoding for Windows console
 if sys.platform == "win32":
+    import locale
     if sys.stdout.encoding != "utf-8":
         os.environ["PYTHONIOENCODING"] = "utf-8"
         # Re-open stdout/stderr with UTF-8 encoding
@@ -323,7 +324,6 @@ def gateway(
         session_manager=session_manager,
         mcp_servers=config.tools.mcp_servers,
         channels_config=config.channels,
-        talon_mode=config.agents.defaults.talon_mode,
     )
 
     # Set cron callback (needs agent)
@@ -506,7 +506,6 @@ def agent(
         restrict_to_workspace=config.tools.restrict_to_workspace,
         mcp_servers=config.tools.mcp_servers,
         channels_config=config.channels,
-        talon_mode=config.agents.defaults.talon_mode,
     )
 
     # Show spinner when logs are off (no output to miss); skip when logs are on

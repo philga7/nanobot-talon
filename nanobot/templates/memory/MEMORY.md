@@ -1,6 +1,6 @@
 # Long-term Memory
 
-This file stores long-term context that may be loaded into prompts across sessions.
+This file stores important information that should persist across sessions.
 
 ## User Information
 
@@ -20,5 +20,4 @@ This file stores long-term context that may be loaded into prompts across sessio
 
 ---
 
-*Native NanoBot mode: this file may be updated by nanobot when important information should be remembered.*
-*Talon mode: this file is a generated compatibility artifact rendered by external memory services and should be treated as read-only from NanoBot's perspective.*
+*This file is automatically updated by nanobot when important information should be remembered.*
