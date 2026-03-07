@@ -45,10 +45,11 @@ _SAVE_MEMORY_TOOL = [
 class MemoryStore:
     """Two-layer memory: MEMORY.md (long-term facts) + HISTORY.md (grep-searchable log)."""
 
-    def __init__(self, workspace: Path):
+    def __init__(self, workspace: Path, *, talon_mode: bool = False):
         self.memory_dir = ensure_dir(workspace / "memory")
         self.memory_file = self.memory_dir / "MEMORY.md"
         self.history_file = self.memory_dir / "HISTORY.md"
+        self.talon_mode = talon_mode
 
     def read_long_term(self) -> str:
         if self.memory_file.exists():
@@ -56,6 +57,9 @@ class MemoryStore:
         return ""
 
     def write_long_term(self, content: str) -> None:
+        if self.talon_mode:
+            logger.info("Talon mode enabled: skipping long-term memory write to {}", self.memory_file)
+            return
         self.memory_file.write_text(content, encoding="utf-8")
 
     def append_history(self, entry: str) -> None:
@@ -79,6 +83,12 @@ class MemoryStore:
 
         Returns True on success (including no-op), False on failure.
         """
+        if self.talon_mode:
+            logger.info(
+                "Talon mode enabled: skipping memory consolidation for externally managed long-term memory"
+            )
+            return True
+
         if archive_all:
             old_messages = session.messages
             keep_count = 0

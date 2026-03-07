@@ -230,6 +230,7 @@ class AgentDefaults(Base):
     temperature: float = 0.1
     max_tool_iterations: int = 40
     memory_window: int = 100
+    talon_mode: bool = False  # If true, NanoBot treats long-term memory as externally managed.
     reasoning_effort: str | None = None  # low / medium / high — enables LLM thinking mode
 
 
