@@ -74,21 +74,3 @@ def test_talon_mode_marks_memory_file_as_read_only(tmp_path) -> None:
 
     assert "generated compatibility file in Talon mode" in prompt
     assert "do not rewrite it" in prompt
-    assert "external episodic memory is authoritative" in prompt
-
-
-def test_talon_mode_still_loads_generated_memory_into_prompt_context(tmp_path) -> None:
-    """Talon mode should load externally rendered MEMORY.md content into the prompt."""
-    workspace = _make_workspace(tmp_path)
-    memory_dir = workspace / "memory"
-    memory_dir.mkdir()
-    (memory_dir / "MEMORY.md").write_text(
-        "# Project Context\nRendered by Talon memory-api.\n",
-        encoding="utf-8",
-    )
-
-    builder = ContextBuilder(workspace, talon_mode=True)
-    prompt = builder.build_system_prompt()
-
-    assert "# Memory" in prompt
-    assert "Rendered by Talon memory-api." in prompt

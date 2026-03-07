@@ -43,7 +43,7 @@ _SAVE_MEMORY_TOOL = [
 
 
 class MemoryStore:
-    """Native two-layer memory with Talon-mode compatibility reads."""
+    """Two-layer memory: MEMORY.md (long-term facts) + HISTORY.md (grep-searchable log)."""
 
     def __init__(self, workspace: Path, *, talon_mode: bool = False):
         self.memory_dir = ensure_dir(workspace / "memory")
@@ -58,10 +58,7 @@ class MemoryStore:
 
     def write_long_term(self, content: str) -> None:
         if self.talon_mode:
-            logger.info(
-                "Talon mode enabled: leaving generated compatibility memory read-only at {}",
-                self.memory_file,
-            )
+            logger.info("Talon mode enabled: skipping long-term memory write to {}", self.memory_file)
             return
         self.memory_file.write_text(content, encoding="utf-8")
 

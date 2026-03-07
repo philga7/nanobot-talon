@@ -10,11 +10,6 @@ Get USER_ID and CHANNEL from the current session (e.g., `8281248569` and `telegr
 
 **Do NOT just write reminders to MEMORY.md** — that won't trigger actual notifications.
 
-## Long-term Memory
-
-`memory/MEMORY.md` is long-term context loaded into prompts.
-If the runtime indicates Talon mode or externally managed memory, treat it as a generated read-only compatibility file.
-
 ## Heartbeat Tasks
 
 `HEARTBEAT.md` is checked on the configured heartbeat interval. Use file tools to manage periodic tasks:

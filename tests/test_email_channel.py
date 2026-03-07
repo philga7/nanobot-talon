@@ -1,5 +1,5 @@
-from datetime import date
 from email.message import EmailMessage
+from datetime import date
 
 import pytest
 
