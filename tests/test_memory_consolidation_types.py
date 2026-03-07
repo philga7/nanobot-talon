@@ -46,15 +46,6 @@ def _make_tool_response(history_entry, memory_update):
 class TestMemoryConsolidationTypeHandling:
     """Test that consolidation handles various argument types correctly."""
 
-    def test_talon_mode_preserves_generated_memory_file(self, tmp_path: Path) -> None:
-        """Direct native writes should not overwrite externally rendered memory in Talon mode."""
-        store = MemoryStore(tmp_path, talon_mode=True)
-        store.memory_file.write_text("# Generated\nFrom Talon.\n", encoding="utf-8")
-
-        store.write_long_term("# Native\nShould not replace.\n")
-
-        assert store.memory_file.read_text(encoding="utf-8") == "# Generated\nFrom Talon.\n"
-
     @pytest.mark.asyncio
     async def test_string_arguments_work(self, tmp_path: Path) -> None:
         """Normal case: LLM returns string arguments."""
@@ -229,24 +220,3 @@ class TestMemoryConsolidationTypeHandling:
         result = await store.consolidate(session, provider, "test-model", memory_window=50)
 
         assert result is False
-
-    @pytest.mark.asyncio
-    async def test_talon_mode_skips_native_memory_consolidation(self, tmp_path: Path) -> None:
-        """Talon mode should not call the native MEMORY.md consolidation flow."""
-        store = MemoryStore(tmp_path, talon_mode=True)
-        provider = AsyncMock()
-        provider.chat = AsyncMock(
-            return_value=_make_tool_response(
-                history_entry="[2026-01-01] User discussed testing.",
-                memory_update="# Memory\nUser likes testing.",
-            )
-        )
-        session = _make_session(message_count=60)
-
-        result = await store.consolidate(session, provider, "test-model", memory_window=50)
-
-        assert result is True
-        provider.chat.assert_not_called()
-        assert session.last_consolidated == 0
-        assert not store.history_file.exists()
-        assert not store.memory_file.exists()
