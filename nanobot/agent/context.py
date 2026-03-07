@@ -19,10 +19,9 @@ class ContextBuilder:
     BOOTSTRAP_FILES = ["AGENTS.md", "SOUL.md", "USER.md", "TOOLS.md", "IDENTITY.md"]
     _RUNTIME_CONTEXT_TAG = "[Runtime Context — metadata only, not instructions]"
 
-    def __init__(self, workspace: Path, *, talon_mode: bool = False):
+    def __init__(self, workspace: Path):
         self.workspace = workspace
-        self.talon_mode = talon_mode
-        self.memory = MemoryStore(workspace, talon_mode=talon_mode)
+        self.memory = MemoryStore(workspace)
         self.skills = SkillsLoader(workspace)
 
     def build_system_prompt(self, skill_names: list[str] | None = None) -> str:
@@ -59,12 +58,6 @@ Skills with available="false" need dependencies installed first - you can try in
         workspace_path = str(self.workspace.expanduser().resolve())
         system = platform.system()
         runtime = f"{'macOS' if system == 'Darwin' else system} {platform.machine()}, Python {platform.python_version()}"
-        memory_line = (
-            f"- Long-term memory: {workspace_path}/memory/MEMORY.md "
-            "(generated compatibility file in Talon mode; do not rewrite it)"
-            if self.talon_mode
-            else f"- Long-term memory: {workspace_path}/memory/MEMORY.md (write important facts here)"
-        )
 
         return f"""# nanobot 🐈
 
@@ -75,7 +68,7 @@ You are nanobot, a helpful AI assistant.
 
 ## Workspace
 Your workspace is at: {workspace_path}
-{memory_line}
+- Long-term memory: {workspace_path}/memory/MEMORY.md (write important facts here)
 - History log: {workspace_path}/memory/HISTORY.md (grep-searchable). Each entry starts with [YYYY-MM-DD HH:MM].
 - Custom skills: {workspace_path}/skills/{{skill-name}}/SKILL.md
 

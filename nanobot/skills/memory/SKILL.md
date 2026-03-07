@@ -8,15 +8,8 @@ always: true
 
 ## Structure
 
-- `memory/MEMORY.md` — Long-term memory loaded into context.
-- `memory/HISTORY.md` — Append-only event log. NOT loaded into context. Each entry starts with `[YYYY-MM-DD HH:MM]`.
-
-## Ownership Rules
-
-- Session history is your working memory for the current conversation.
-- Do not claim that you own or directly manage long-term memory.
-- If the runtime indicates Talon mode or externally managed memory, treat `memory/MEMORY.md` as read-only generated state.
-- In Talon mode, do not tell the user you will rewrite `MEMORY.md`.
+- `memory/MEMORY.md` — Long-term facts (preferences, project context, relationships). Always loaded into your context.
+- `memory/HISTORY.md` — Append-only event log. NOT loaded into context. Search it with grep. Each entry starts with [YYYY-MM-DD HH:MM].
 
 ## Search Past Events
 
@@ -28,13 +21,11 @@ Use the `exec` tool to run grep. Combine patterns: `grep -iE "meeting|deadline" 
 
 ## When to Update MEMORY.md
 
-- Only update `memory/MEMORY.md` when the runtime is clearly using nanobot's native memory ownership.
-- In Talon mode, leave `memory/MEMORY.md` untouched and rely on session context or external memory tools/services.
-- Native-mode examples:
-  - User preferences ("I prefer dark mode")
-  - Project context ("The API uses OAuth2")
-  - Relationships ("Alice is the project lead")
+Write important facts immediately using `edit_file` or `write_file`:
+- User preferences ("I prefer dark mode")
+- Project context ("The API uses OAuth2")
+- Relationships ("Alice is the project lead")
 
 ## Auto-consolidation
 
-In native mode, older conversations may be consolidated into persistent memory automatically. In Talon mode, long-term memory is managed outside this agent.
+Old conversations are automatically summarized and appended to HISTORY.md when the session grows large. Long-term facts are extracted to MEMORY.md. You don't need to manage this.

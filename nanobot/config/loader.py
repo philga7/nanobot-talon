@@ -66,24 +66,4 @@ def _migrate_config(data: dict) -> dict:
     exec_cfg = tools.get("exec", {})
     if "restrictToWorkspace" in exec_cfg and "restrictToWorkspace" not in tools:
         tools["restrictToWorkspace"] = exec_cfg.pop("restrictToWorkspace")
-
-    agents = data.setdefault("agents", {})
-    defaults = agents.setdefault("defaults", {})
-    legacy_top_level_talon = None
-    if "talonMode" in data:
-        legacy_top_level_talon = bool(data.pop("talonMode"))
-    elif "talon_mode" in data:
-        legacy_top_level_talon = bool(data.pop("talon_mode"))
-
-    explicit_talon_mode = "talonMode" in defaults or "talon_mode" in defaults
-    if legacy_top_level_talon is not None and not explicit_talon_mode:
-        defaults["talonMode"] = legacy_top_level_talon
-
-    explicit_talon_mode = "talonMode" in defaults or "talon_mode" in defaults
-    legacy_memory_mode = defaults.pop("memoryMode", defaults.pop("memory_mode", None))
-    if legacy_memory_mode is not None and not explicit_talon_mode:
-        if isinstance(legacy_memory_mode, str):
-            defaults["talonMode"] = legacy_memory_mode.strip().lower() == "talon"
-        else:
-            defaults["talonMode"] = bool(legacy_memory_mode)
     return data
