@@ -10,7 +10,7 @@ When Mem0 is enabled, long-term memory is stored in Mem0 (PostgreSQL + pgvector 
 - **talon-mem0-mcp** — Bridge that exposes `/recall`, `/capture`, and MCP tools
 - **NanoBot** — Connects to talon-mem0-mcp for auto-recall and auto-capture
 
-See [mem0_remote_mcp_plan.md](../.cursor/plans/mem0_remote_mcp_plan.md) for the full architecture.
+See [mem0_remote_mcp_plan.md](../.cursor/plans/mem0_remote_mcp_plan.md) for the full architecture. For long-term retention, offloading, and planning, see [memory-management.md](memory-management.md).
 
 ---
 
