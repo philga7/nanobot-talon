@@ -22,6 +22,10 @@ When Mem0 is enabled (`mem0.enabled: true`), long-term memory is stored in Mem0 
 
 Web search uses SearXNG when `tools.web.search.searxngBaseUrl` is set (e.g. `http://localhost:8080/`). The instance lives in [searxng/](searxng/) with its own `docker-compose.yml` and `config/settings.yml`. Start with `cd searxng && docker compose up -d`; `./scripts/start.sh` can start it as part of the stack (see README).
 
+## ntfy (Push Notifications)
+
+Push notifications use a remote ntfy server (e.g. VPS at https://ntfy.informedcrew.com) via the ntfy-me-mcp MCP server. Add `ntfy` to `tools.mcpServers` in NanoBot config with `NTFY_URL`, `NTFY_TOPIC`, and `NTFY_TOKEN`. See [docs/ntfy.md](docs/ntfy.md) for setup.
+
 ## Key Areas
 
 - `nanobot/agent/`: core loop, prompt/context building, memory seams, tool registry (incl. web_search via SearXNG)

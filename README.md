@@ -1020,6 +1020,10 @@ To enable web search, use a local [SearXNG](https://github.com/searxng/searxng) 
 
 SearXNG runs from the [searxng/](searxng/) directory (WrenAir instance). Start it manually with `cd searxng && docker compose up -d`, or use `./scripts/start.sh` to bring it up with the rest of the stack. The agent’s `web_search` tool will then use SearXNG when this URL is set.
 
+### ntfy (Push Notifications, Talon)
+
+Push notifications use a VPS-hosted ntfy server (e.g. https://ntfy.informedcrew.com) via ntfy-me-mcp. Add the ntfy MCP server to `tools.mcpServers` with `NTFY_URL`, `NTFY_TOPIC`, and `NTFY_TOKEN`. See [docs/ntfy.md](docs/ntfy.md) for setup.
+
 ### Docker
 
 ```bash
