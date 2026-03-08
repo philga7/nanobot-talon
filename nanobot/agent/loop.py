@@ -28,8 +28,10 @@ from nanobot.providers.base import LLMProvider
 from nanobot.session.manager import Session, SessionManager
 
 if TYPE_CHECKING:
-    from nanobot.config.schema import ChannelsConfig, ExecToolConfig
+    from nanobot.config.schema import ChannelsConfig, ExecToolConfig, Mem0Config
     from nanobot.cron.service import CronService
+
+from nanobot.config.schema import MCPServerConfig
 
 
 class AgentLoop:
@@ -65,6 +67,7 @@ class AgentLoop:
         session_manager: SessionManager | None = None,
         mcp_servers: dict | None = None,
         channels_config: ChannelsConfig | None = None,
+        mem0_config: Mem0Config | None = None,
     ):
         from nanobot.config.schema import ExecToolConfig
         self.bus = bus
@@ -82,8 +85,9 @@ class AgentLoop:
         self.exec_config = exec_config or ExecToolConfig()
         self.cron_service = cron_service
         self.restrict_to_workspace = restrict_to_workspace
+        self.mem0_config = mem0_config
 
-        self.context = ContextBuilder(workspace)
+        self.context = ContextBuilder(workspace, mem0_config=mem0_config)
         self.sessions = session_manager or SessionManager(workspace)
         self.tools = ToolRegistry()
         self.subagents = SubagentManager(
@@ -101,7 +105,22 @@ class AgentLoop:
         )
 
         self._running = False
-        self._mcp_servers = mcp_servers or {}
+        self._mem0_client = None
+        if mem0_config and mem0_config.enabled:
+            from nanobot.agent.memory_mem0_client import Mem0Client
+
+            self._mem0_client = Mem0Client(
+                api_url=mem0_config.api_url,
+                user_id=mem0_config.user_id,
+                top_k=mem0_config.top_k,
+            )
+        mcp = dict(mcp_servers) if mcp_servers else {}
+        if mem0_config and mem0_config.enabled and "mem0" not in mcp:
+            mcp["mem0"] = MCPServerConfig(
+                url=f"{mem0_config.api_url.rstrip('/')}/mcp",
+                tool_timeout=30,
+            )
+        self._mcp_servers = mcp
         self._mcp_stack: AsyncExitStack | None = None
         self._mcp_connected = False
         self._mcp_connecting = False
@@ -115,8 +134,23 @@ class AgentLoop:
     def _register_default_tools(self) -> None:
         """Register the default set of tools."""
         allowed_dir = self.workspace if self.restrict_to_workspace else None
-        for cls in (ReadFileTool, WriteFileTool, EditFileTool, ListDirTool):
+        block_memory = bool(self.mem0_config and self.mem0_config.enabled)
+        for cls in (ReadFileTool, ListDirTool):
             self.tools.register(cls(workspace=self.workspace, allowed_dir=allowed_dir))
+        self.tools.register(
+            WriteFileTool(
+                workspace=self.workspace,
+                allowed_dir=allowed_dir,
+                block_memory_files=block_memory,
+            )
+        )
+        self.tools.register(
+            EditFileTool(
+                workspace=self.workspace,
+                allowed_dir=allowed_dir,
+                block_memory_files=block_memory,
+            )
+        )
         self.tools.register(ExecTool(
             working_dir=str(self.workspace),
             timeout=self.exec_config.timeout,
@@ -343,13 +377,25 @@ class AgentLoop:
             session = self.sessions.get_or_create(key)
             self._set_tool_context(channel, chat_id, msg.metadata.get("message_id"))
             history = session.get_history(max_messages=self.memory_window)
+            mem0_memories = ""
+            if self._mem0_client and self.mem0_config and self.mem0_config.auto_recall:
+                mem0_memories = await self._mem0_client.recall(msg.content, run_id=session.key)
             messages = self.context.build_messages(
                 history=history,
-                current_message=msg.content, channel=channel, chat_id=chat_id,
+                current_message=msg.content,
+                channel=channel,
+                chat_id=chat_id,
+                mem0_memories=mem0_memories if mem0_memories else None,
             )
             final_content, _, all_msgs = await self._run_agent_loop(messages)
             self._save_turn(session, all_msgs, 1 + len(history))
             self.sessions.save(session)
+            if self._mem0_client and self.mem0_config and self.mem0_config.auto_capture:
+                user_msgs = [m for m in all_msgs if m.get("role") in ("user", "assistant")]
+                if user_msgs:
+                    asyncio.create_task(
+                        self._mem0_client.capture(user_msgs[-4:], run_id=session.key)
+                    )
             return OutboundMessage(channel=channel, chat_id=chat_id,
                                   content=final_content or "Background task completed.")
 
@@ -362,6 +408,12 @@ class AgentLoop:
         # Slash commands
         cmd = msg.content.strip().lower()
         if cmd == "/new":
+            if self.mem0_config and self.mem0_config.enabled:
+                session.clear()
+                self.sessions.save(session)
+                self.sessions.invalidate(session.key)
+                return OutboundMessage(channel=msg.channel, chat_id=msg.chat_id,
+                                       content="New session started.")
             lock = self._consolidation_locks.setdefault(session.key, asyncio.Lock())
             self._consolidating.add(session.key)
             try:
@@ -394,7 +446,11 @@ class AgentLoop:
                                   content="🐈 nanobot commands:\n/new — Start a new conversation\n/stop — Stop the current task\n/help — Show available commands")
 
         unconsolidated = len(session.messages) - session.last_consolidated
-        if (unconsolidated >= self.memory_window and session.key not in self._consolidating):
+        if (
+            not (self.mem0_config and self.mem0_config.enabled)
+            and unconsolidated >= self.memory_window
+            and session.key not in self._consolidating
+        ):
             self._consolidating.add(session.key)
             lock = self._consolidation_locks.setdefault(session.key, asyncio.Lock())
 
@@ -417,11 +473,16 @@ class AgentLoop:
                 message_tool.start_turn()
 
         history = session.get_history(max_messages=self.memory_window)
+        mem0_memories = ""
+        if self._mem0_client and self.mem0_config and self.mem0_config.auto_recall:
+            mem0_memories = await self._mem0_client.recall(msg.content, run_id=session.key)
         initial_messages = self.context.build_messages(
             history=history,
             current_message=msg.content,
             media=msg.media if msg.media else None,
-            channel=msg.channel, chat_id=msg.chat_id,
+            channel=msg.channel,
+            chat_id=msg.chat_id,
+            mem0_memories=mem0_memories if mem0_memories else None,
         )
 
         async def _bus_progress(content: str, *, tool_hint: bool = False) -> None:
@@ -441,6 +502,11 @@ class AgentLoop:
 
         self._save_turn(session, all_msgs, 1 + len(history))
         self.sessions.save(session)
+
+        if self._mem0_client and self.mem0_config and self.mem0_config.auto_capture:
+            user_msgs = [m for m in all_msgs if m.get("role") in ("user", "assistant")]
+            if user_msgs:
+                asyncio.create_task(self._mem0_client.capture(user_msgs[-4:], run_id=session.key))
 
         if (mt := self.tools.get("message")) and isinstance(mt, MessageTool) and mt._sent_in_turn:
             return None

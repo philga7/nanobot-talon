@@ -979,6 +979,29 @@ docker compose logs -f nanobot-gateway                   # view logs
 docker compose down                                      # stop
 ```
 
+### Mem0 Remote Memory (Talon)
+
+When using Mem0 for long-term memory, start the full stack with:
+
+```bash
+./scripts/start.sh   # starts Mem0 + talon-mem0-mcp + nanobot-gateway
+./scripts/stop.sh    # stops everything (preserves data — do not use -v)
+```
+
+Add to `~/.nanobot/config.json`:
+
+```json
+{
+  "mem0": {
+    "enabled": true,
+    "apiUrl": "http://localhost:3002",
+    "userId": "default"
+  }
+}
+```
+
+See [docs/mem0.md](docs/mem0.md) for backup, restore, and sharing Mem0 data.
+
 ### Docker
 
 ```bash

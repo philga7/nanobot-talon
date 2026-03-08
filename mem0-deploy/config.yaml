@@ -1,0 +1,31 @@
+# config.yaml - Ollama with mxbai-embed-large
+llm:
+  provider: openai
+  config:
+    model: gemini-3-flash-preview:cloud
+    temperature: 0
+    max_tokens: 2000
+    openai_base_url: https://ollama.com/v1
+
+embedder:
+  provider: ollama
+  config:
+    model: mxbai-embed-large
+    ollama_base_url: http://host.docker.internal:11434
+
+vector_store:
+  provider: pgvector
+  config:
+    host: postgres
+    port: 5432
+    user: postgres
+    password: mem0pg
+    dbname: postgres
+    embedding_model_dims: 1024   # mxbai-embed-large outputs 1024 dimensions
+
+graph_store:
+  provider: neo4j
+  config:
+    url: bolt://neo4j:7687
+    username: neo4j
+    password: mem0graph

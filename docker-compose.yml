@@ -6,6 +6,18 @@ x-common-config: &common-config
     - ~/.nanobot:/root/.nanobot
 
 services:
+  talon-mem0-mcp:
+    build: ./services/mem0-mcp
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - MEM0_API_URL=${MEM0_API_URL:-http://host.docker.internal:8000}
+      - MEM0_USER_ID=${MEM0_USER_ID:-default}
+      - MEM0_TOP_K=${MEM0_TOP_K:-5}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
   nanobot-gateway:
     container_name: nanobot-gateway
     <<: *common-config
@@ -13,6 +25,8 @@ services:
     restart: unless-stopped
     ports:
       - 18790:18790
+    depends_on:
+      - talon-mem0-mcp
     deploy:
       resources:
         limits:

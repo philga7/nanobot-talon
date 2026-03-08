@@ -329,6 +329,17 @@ class ToolsConfig(Base):
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
 
 
+class Mem0Config(Base):
+    """Mem0 remote memory configuration (talon-mem0-mcp bridge)."""
+
+    enabled: bool = False
+    api_url: str = "http://localhost:3002"
+    user_id: str = "default"
+    auto_recall: bool = True
+    auto_capture: bool = True
+    top_k: int = 5
+
+
 class Config(BaseSettings):
     """Root configuration for nanobot."""
 
@@ -337,6 +348,7 @@ class Config(BaseSettings):
     providers: ProvidersConfig = Field(default_factory=ProvidersConfig)
     gateway: GatewayConfig = Field(default_factory=GatewayConfig)
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
+    mem0: Mem0Config = Field(default_factory=Mem0Config)
 
     @property
     def workspace_path(self) -> Path:

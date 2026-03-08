@@ -11,8 +11,12 @@ Current roadmap and branch plan live in `.cursor/plans/talon_fork_phases_e4896c1
 - Keep the fork rebase-friendly and close to upstream NanoBot.
 - Prefer config-gated seams over broad Talon-only branches in the code.
 - Preserve session history as NanoBot's working memory.
-- In Talon mode, treat `workspace/memory/MEMORY.md` as read-only compatibility input.
+- When Mem0 is disabled, treat `workspace/memory/MEMORY.md` as read-only compatibility input. When Mem0 is enabled, memory is managed remotely; NanoBot does not write to MEMORY.md or HISTORY.md.
 - Prefer remote MCP services over baking Talon integrations into NanoBot core.
+
+## Mem0 Remote Memory
+
+When Mem0 is enabled (`mem0.enabled: true`), long-term memory is stored in Mem0 (PostgreSQL + pgvector + Neo4j) instead of file-based MEMORY.md/HISTORY.md. See [docs/mem0.md](docs/mem0.md) for starting, stopping, backing up, and sharing Mem0 data.
 
 ## Key Areas
 
