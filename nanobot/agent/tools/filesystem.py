@@ -73,12 +73,32 @@ class ReadFileTool(Tool):
             return f"Error reading file: {str(e)}"
 
 
+_MEMORY_FILES = ("memory/MEMORY.md", "memory/HISTORY.md")
+
+
+def _is_memory_file(resolved: Path, workspace: Path | None) -> bool:
+    """Return True if path is MEMORY.md or HISTORY.md under memory/."""
+    if not workspace:
+        return False
+    try:
+        rel = resolved.resolve().relative_to(Path(workspace).resolve())
+    except ValueError:
+        return False
+    return str(rel) in _MEMORY_FILES or rel.as_posix() in _MEMORY_FILES
+
+
 class WriteFileTool(Tool):
     """Tool to write content to a file."""
 
-    def __init__(self, workspace: Path | None = None, allowed_dir: Path | None = None):
+    def __init__(
+        self,
+        workspace: Path | None = None,
+        allowed_dir: Path | None = None,
+        block_memory_files: bool = False,
+    ):
         self._workspace = workspace
         self._allowed_dir = allowed_dir
+        self._block_memory_files = block_memory_files
 
     @property
     def name(self) -> str:
@@ -102,6 +122,11 @@ class WriteFileTool(Tool):
     async def execute(self, path: str, content: str, **kwargs: Any) -> str:
         try:
             file_path = _resolve_path(path, self._workspace, self._allowed_dir)
+            if self._block_memory_files and _is_memory_file(file_path, self._workspace):
+                return (
+                    "Error: Cannot write to memory/MEMORY.md or memory/HISTORY.md when Mem0 is enabled. "
+                    "Memory is managed via Mem0; use the add_memory or search_memories MCP tools instead."
+                )
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.write_text(content, encoding="utf-8")
             return f"Successfully wrote {len(content)} bytes to {file_path}"
@@ -114,9 +139,15 @@ class WriteFileTool(Tool):
 class EditFileTool(Tool):
     """Tool to edit a file by replacing text."""
 
-    def __init__(self, workspace: Path | None = None, allowed_dir: Path | None = None):
+    def __init__(
+        self,
+        workspace: Path | None = None,
+        allowed_dir: Path | None = None,
+        block_memory_files: bool = False,
+    ):
         self._workspace = workspace
         self._allowed_dir = allowed_dir
+        self._block_memory_files = block_memory_files
 
     @property
     def name(self) -> str:
@@ -141,6 +172,11 @@ class EditFileTool(Tool):
     async def execute(self, path: str, old_text: str, new_text: str, **kwargs: Any) -> str:
         try:
             file_path = _resolve_path(path, self._workspace, self._allowed_dir)
+            if self._block_memory_files and _is_memory_file(file_path, self._workspace):
+                return (
+                    "Error: Cannot edit memory/MEMORY.md or memory/HISTORY.md when Mem0 is enabled. "
+                    "Memory is managed via Mem0; use the add_memory or search_memories MCP tools instead."
+                )
             if not file_path.exists():
                 return f"Error: File not found: {path}"
 
