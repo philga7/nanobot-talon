@@ -119,7 +119,7 @@ pip install nanobot-ai
 
 > [!TIP]
 > Set your API key in `~/.nanobot/config.json`.
-> Get API keys: [OpenRouter](https://openrouter.ai/keys) (Global) · [Brave Search](https://brave.com/search/api/) (optional, for web search)
+> Get API keys: [OpenRouter](https://openrouter.ai/keys) (Global). Web search requires [SearXNG](searxng/) (see below).
 
 **1. Initialize**
 
@@ -984,7 +984,7 @@ docker compose down                                      # stop
 When using Mem0 for long-term memory, start the full stack with:
 
 ```bash
-./scripts/start.sh   # starts Mem0 + talon-mem0-mcp + nanobot-gateway
+./scripts/start.sh   # starts Mem0 + SearXNG (optional) + talon-mem0-mcp + nanobot-gateway
 ./scripts/stop.sh    # stops everything (preserves data — do not use -v)
 ```
 
@@ -1001,6 +1001,24 @@ Add to `~/.nanobot/config.json`:
 ```
 
 See [docs/mem0.md](docs/mem0.md) for backup, restore, and sharing Mem0 data.
+
+### SearXNG (Web Search, Talon)
+
+To enable web search, use a local [SearXNG](https://github.com/searxng/searxng) instance. Add to `~/.nanobot/config.json`:
+
+```json
+{
+  "tools": {
+    "web": {
+      "search": {
+        "searxngBaseUrl": "http://localhost:8080/"
+      }
+    }
+  }
+}
+```
+
+SearXNG runs from the [searxng/](searxng/) directory (WrenAir instance). Start it manually with `cd searxng && docker compose up -d`, or use `./scripts/start.sh` to bring it up with the rest of the stack. The agent’s `web_search` tool will then use SearXNG when this URL is set.
 
 ### Docker
 

@@ -1,0 +1,26 @@
+services:
+  searxng:
+    container_name: searxng
+    image: searxng/searxng:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"  # Localhost only
+    volumes:
+      - ./config:/etc/searxng:rw
+    environment:
+      - SEARXNG_BASE_URL=http://localhost:8080/
+      - UWSGI_WORKERS=1  # Memory optimization: 150MB vs 600MB
+      - UWSGI_THREADS=4
+    mem_limit: 256m  # Hard cap for resource management
+    cpus: 0.5
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --tries=1 http://localhost:8080/ -O /dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

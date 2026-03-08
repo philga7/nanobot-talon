@@ -16,7 +16,7 @@ See [mem0_remote_mcp_plan.md](../.cursor/plans/mem0_remote_mcp_plan.md) for the 
 
 ## Starting
 
-Use the provided scripts (recommended):
+Use the provided scripts (recommended). They also start and stop SearXNG (from `searxng/`) if present.
 
 ```bash
 ./scripts/start.sh
@@ -40,7 +40,7 @@ Ensure `mem0.enabled: true` and `mem0.apiUrl` are set in `~/.nanobot/config.json
 
 ## Stopping (Without Destroying Data)
 
-Use the provided script:
+Use the provided script (it also stops SearXNG if it was started):
 
 ```bash
 ./scripts/stop.sh
