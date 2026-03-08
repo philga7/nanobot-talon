@@ -288,8 +288,8 @@ class GatewayConfig(Base):
 class WebSearchConfig(Base):
     """Web search tool configuration."""
 
-    api_key: str = ""  # Brave Search API key
     max_results: int = 5
+    searxng_base_url: str | None = None  # e.g. "http://localhost:8080/" → required for web_search
 
 
 class WebToolsConfig(Base):

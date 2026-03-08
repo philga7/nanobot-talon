@@ -2,7 +2,6 @@
 
 import html
 import json
-import os
 import re
 from typing import Any
 from urllib.parse import urlparse
@@ -44,8 +43,24 @@ def _validate_url(url: str) -> tuple[bool, str]:
         return False, str(e)
 
 
+def _format_search_results(query: str, results: list[dict], max_n: int) -> str:
+    """Format search result items into a single string."""
+    results = results[:max_n]
+    if not results:
+        return f"No results for: {query}"
+    lines = [f"Results for: {query}\n"]
+    for i, item in enumerate(results, 1):
+        title = item.get("title", "")
+        url = item.get("url", "")
+        desc = item.get("description") or item.get("content", "")
+        lines.append(f"{i}. {title}\n   {url}")
+        if desc:
+            lines.append(f"   {desc}")
+    return "\n".join(lines)
+
+
 class WebSearchTool(Tool):
-    """Search the web using Brave Search API."""
+    """Search the web using SearXNG."""
 
     name = "web_search"
     description = "Search the web. Returns titles, URLs, and snippets."
@@ -58,51 +73,55 @@ class WebSearchTool(Tool):
         "required": ["query"]
     }
 
-    def __init__(self, api_key: str | None = None, max_results: int = 5, proxy: str | None = None):
-        self._init_api_key = api_key
+    def __init__(
+        self,
+        max_results: int = 5,
+        proxy: str | None = None,
+        searxng_base_url: str | None = None,
+    ):
         self.max_results = max_results
         self.proxy = proxy
-
-    @property
-    def api_key(self) -> str:
-        """Resolve API key at call time so env/config changes are picked up."""
-        return self._init_api_key or os.environ.get("BRAVE_API_KEY", "")
+        self._searxng_base_url = (searxng_base_url or "").strip().rstrip("/") or None
 
     async def execute(self, query: str, count: int | None = None, **kwargs: Any) -> str:
-        if not self.api_key:
+        n = min(max(count or self.max_results, 1), 10)
+        if not self._searxng_base_url:
             return (
-                "Error: Brave Search API key not configured. Set it in "
-                "~/.nanobot/config.json under tools.web.search.apiKey "
-                "(or export BRAVE_API_KEY), then restart the gateway."
+                "Error: SearXNG not configured. Set tools.web.search.searxngBaseUrl in "
+                "~/.nanobot/config.json (e.g. http://localhost:8080/), then restart the gateway."
             )
+        return await self._execute_searxng(query, n)
 
+    async def _execute_searxng(self, query: str, n: int) -> str:
+        """Query SearXNG JSON API and return formatted results."""
+        base = self._searxng_base_url
+        url = f"{base}/search"
         try:
-            n = min(max(count or self.max_results, 1), 10)
-            logger.debug("WebSearch: {}", "proxy enabled" if self.proxy else "direct connection")
-            async with httpx.AsyncClient(proxy=self.proxy) as client:
+            logger.debug("WebSearch (SearXNG): {}", base)
+            async with httpx.AsyncClient(proxy=self.proxy, timeout=10.0) as client:
                 r = await client.get(
-                    "https://api.search.brave.com/res/v1/web/search",
-                    params={"q": query, "count": n},
-                    headers={"Accept": "application/json", "X-Subscription-Token": self.api_key},
-                    timeout=10.0
+                    url,
+                    params={"q": query, "format": "json", "pageno": 1},
+                    headers={"Accept": "application/json"},
                 )
                 r.raise_for_status()
-
-            results = r.json().get("web", {}).get("results", [])[:n]
-            if not results:
-                return f"No results for: {query}"
-
-            lines = [f"Results for: {query}\n"]
-            for i, item in enumerate(results, 1):
-                lines.append(f"{i}. {item.get('title', '')}\n   {item.get('url', '')}")
-                if desc := item.get("description"):
-                    lines.append(f"   {desc}")
-            return "\n".join(lines)
+            data = r.json()
+            raw = data.get("results", [])
+            # Normalize to common shape: title, url, description/content
+            results = [
+                {
+                    "title": item.get("title", ""),
+                    "url": item.get("url", ""),
+                    "content": item.get("content", ""),
+                }
+                for item in raw
+            ]
+            return _format_search_results(query, results, n)
         except httpx.ProxyError as e:
-            logger.error("WebSearch proxy error: {}", e)
+            logger.error("WebSearch (SearXNG) proxy error: {}", e)
             return f"Proxy error: {e}"
         except Exception as e:
-            logger.error("WebSearch error: {}", e)
+            logger.error("WebSearch (SearXNG) error: {}", e)
             return f"Error: {e}"
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the Mem0 + NanoBot stack with health checks.
+# Start the Mem0 + SearXNG (optional) + NanoBot stack with health checks.
 # Run from the project root: ./scripts/start.sh
 
 set -e
@@ -7,10 +7,12 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MEM0_DEPLOY="${MEM0_DEPLOY:-$PROJECT_ROOT/mem0-deploy}"
+SEARXNG_DIR="${SEARXNG_DIR:-$PROJECT_ROOT/searxng}"
 
 echo "==> Starting Mem0 + NanoBot stack"
 echo "    Project root: $PROJECT_ROOT"
 echo "    Mem0 deploy:  $MEM0_DEPLOY"
+echo "    SearXNG:      $SEARXNG_DIR"
 echo ""
 
 # 1. Start Mem0 stack
@@ -37,7 +39,32 @@ else
   echo "    Set MEM0_DEPLOY to your mem0-deploy path if needed."
 fi
 
-# 2. Start talon-mem0-mcp and nanobot-gateway
+# 2. Start SearXNG (optional; for web search when tools.web.search.searxngBaseUrl is set)
+if [[ -d "$SEARXNG_DIR" ]] && [[ -f "$SEARXNG_DIR/docker-compose.yml" ]]; then
+  echo ""
+  echo "==> Starting SearXNG (WrenAir)..."
+  cd "$SEARXNG_DIR"
+  docker compose up -d
+  cd "$PROJECT_ROOT"
+
+  echo "==> Waiting for SearXNG (http://127.0.0.1:8080)..."
+  for i in {1..30}; do
+    if curl -sf -o /dev/null "http://127.0.0.1:8080/" 2>/dev/null; then
+      echo "    SearXNG is up."
+      break
+    fi
+    if [[ $i -eq 30 ]]; then
+      echo "    WARN: SearXNG did not become ready within 60 seconds."
+    fi
+    sleep 2
+  done
+else
+  echo ""
+  echo "==> Skipping SearXNG (not found at $SEARXNG_DIR)"
+  echo "    Set SEARXNG_DIR to your searxng path if needed."
+fi
+
+# 3. Start talon-mem0-mcp and nanobot-gateway
 echo ""
 echo "==> Starting talon-mem0-mcp and nanobot-gateway..."
 cd "$PROJECT_ROOT"
@@ -71,6 +98,7 @@ done
 echo ""
 echo "==> Stack started."
 echo "    Mem0 API:        http://localhost:8000"
+echo "    SearXNG:         http://127.0.0.1:8080 (if started)"
 echo "    talon-mem0-mcp:  http://localhost:3002"
 echo "    nanobot-gateway: http://localhost:18790"
 echo ""

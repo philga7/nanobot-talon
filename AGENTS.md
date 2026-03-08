@@ -18,9 +18,13 @@ Current roadmap and branch plan live in `.cursor/plans/talon_fork_phases_e4896c1
 
 When Mem0 is enabled (`mem0.enabled: true`), long-term memory is stored in Mem0 (PostgreSQL + pgvector + Neo4j) instead of file-based MEMORY.md/HISTORY.md. See [docs/mem0.md](docs/mem0.md) for starting, stopping, backing up, and sharing Mem0 data.
 
+## SearXNG (Web Search)
+
+Web search uses SearXNG when `tools.web.search.searxngBaseUrl` is set (e.g. `http://localhost:8080/`). The instance lives in [searxng/](searxng/) with its own `docker-compose.yml` and `config/settings.yml`. Start with `cd searxng && docker compose up -d`; `./scripts/start.sh` can start it as part of the stack (see README).
+
 ## Key Areas
 
-- `nanobot/agent/`: core loop, prompt/context building, memory seams, tool registry
+- `nanobot/agent/`: core loop, prompt/context building, memory seams, tool registry (incl. web_search via SearXNG)
 - `nanobot/session/`: session persistence and working-memory behavior
 - `nanobot/config/`: schema, config loading, and migrations
 - `nanobot/channels/`: chat transports and gateway integrations

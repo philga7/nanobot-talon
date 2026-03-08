@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop the Mem0 + NanoBot stack.
+# Stop the Mem0 + SearXNG + NanoBot stack.
 # Run from the project root: ./scripts/stop.sh
 
 set -e
@@ -7,6 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MEM0_DEPLOY="${MEM0_DEPLOY:-$PROJECT_ROOT/mem0-deploy}"
+SEARXNG_DIR="${SEARXNG_DIR:-$PROJECT_ROOT/searxng}"
 
 echo "==> Stopping NanoBot + talon-mem0-mcp..."
 cd "$PROJECT_ROOT"
@@ -21,6 +22,17 @@ if [[ -d "$MEM0_DEPLOY" ]] && [[ -f "$MEM0_DEPLOY/docker-compose.yaml" ]]; then
   echo "    Mem0 stack stopped."
 else
   echo "    Mem0 deploy not found at $MEM0_DEPLOY (skipped)."
+fi
+
+echo ""
+echo "==> Stopping SearXNG..."
+if [[ -d "$SEARXNG_DIR" ]] && [[ -f "$SEARXNG_DIR/docker-compose.yml" ]]; then
+  cd "$SEARXNG_DIR"
+  docker compose down
+  cd "$PROJECT_ROOT"
+  echo "    SearXNG stopped."
+else
+  echo "    SearXNG not found at $SEARXNG_DIR (skipped)."
 fi
 
 echo ""
