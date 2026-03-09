@@ -1,6 +1,6 @@
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-# Install Node.js 20 for the WhatsApp bridge
+# Install Node.js 20 for the App bridge
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl ca-certificates gnupg git && \
     mkdir -p /etc/apt/keyrings && \
@@ -25,8 +25,14 @@ COPY nanobot/ nanobot/
 COPY bridge/ bridge/
 RUN uv pip install --system --no-cache .
 
-# Build the WhatsApp bridge
+# Build the App bridge
 WORKDIR /app/bridge
+RUN npm install && npm run build
+WORKDIR /app
+
+# Build the bird MCP (X/Twitter read-only) server
+COPY services/bird-mcp/ services/bird-mcp/
+WORKDIR /app/services/bird-mcp
 RUN npm install && npm run build
 WORKDIR /app
 
