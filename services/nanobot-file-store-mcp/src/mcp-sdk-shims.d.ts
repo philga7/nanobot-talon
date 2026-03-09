@@ -1,4 +1,4 @@
-declare module "@modelcontextprotocol/sdk/server/mcp.js" {
+declare module "@modelcontextprotocol/sdk/server/mcp" {
   import type { Implementation } from "@modelcontextprotocol/sdk/server";
 
   export class McpServer {
@@ -13,7 +13,7 @@ declare module "@modelcontextprotocol/sdk/server/mcp.js" {
   }
 }
 
-declare module "@modelcontextprotocol/sdk/server/stdio.js" {
+declare module "@modelcontextprotocol/sdk/server/stdio" {
   export class StdioServerTransport {
     constructor();
     start(): Promise<void>;
