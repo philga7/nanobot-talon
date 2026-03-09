@@ -1,0 +1,70 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "~/.nanobot-wren-vps/workspace",
+      "model": "gemini-3-flash-preview:cloud",
+      "provider": "custom",
+      "memoryWindow": 100
+    }
+  },
+  "providers": {
+    "custom": {
+      "apiKey": "REPLACE_ME_API_KEY",
+      "apiBase": "https://ollama.com/v1"
+    }
+  },
+  "gateway": {
+    "port": 18790
+  },
+  "tools": {
+    "web": {
+      "search": {
+        "searxngBaseUrl": "http://host.docker.internal:8080"
+      }
+    },
+    "restrictToWorkspace": false,
+    "mcpServers": {
+      "ntfy": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "ntfy-me-mcp"
+        ],
+        "env": {
+          "NTFY_TOPIC": "wrenvps-notifications",
+          "NTFY_URL": "https://ntfy.informedcrew.com",
+          "NTFY_TOKEN": "REPLACE_ME_NTFY_TOKEN"
+        }
+      },
+      "bird": {
+        "command": "node",
+        "args": [
+          "/app/services/bird-mcp/dist/index.js"
+        ],
+        "env": {
+          "AUTH_TOKEN": "REPLACE_ME_AUTH_TOKEN",
+          "CT0": "REPLACE_ME_CT0"
+        },
+        "toolTimeout": 30
+      },
+      "nanobot-file-store": {
+        "command": "node",
+        "args": [
+          "/app/services/nanobot-file-store-mcp/dist/index.js"
+        ],
+        "env": {
+          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data"
+        },
+        "toolTimeout": 30
+      }
+    }
+  },
+  "mem0": {
+    "enabled": true,
+    "apiUrl": "http://host.docker.internal:3002",
+    "userId": "wren-vps",
+    "autoRecall": true,
+    "autoCapture": true,
+    "topK": 5
+  }
+}
