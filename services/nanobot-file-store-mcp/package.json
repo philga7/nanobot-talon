@@ -8,7 +8,7 @@
     "nanobot-file-store-mcp": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "node build.mjs",
     "start": "node dist/index.js",
     "dev": "npm run build && node dist/index.js",
     "test": "tsc -p tsconfig.json --noEmit"
