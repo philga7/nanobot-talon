@@ -9,7 +9,13 @@
     "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true
+    "declaration": true,
+    "baseUrl": ".",
+    "paths": {
+      "@modelcontextprotocol/sdk/*": [
+        "./node_modules/@modelcontextprotocol/sdk/dist/esm/*"
+      ]
+    }
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules", "dist"]
