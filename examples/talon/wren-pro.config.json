@@ -44,16 +44,6 @@
           "NTFY_URL": "https://ntfy.informedcrew.com",
           "NTFY_TOKEN": "REPLACE_ME_NTFY_TOKEN"
         }
-      },
-      "nanobot-file-store": {
-        "command": "node",
-        "args": [
-          "/app/services/nanobot-file-store-mcp/dist/index.js"
-        ],
-        "env": {
-          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data-work"
-        },
-        "toolTimeout": 30
       }
     }
   },
