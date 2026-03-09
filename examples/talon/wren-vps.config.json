@@ -55,16 +55,6 @@
           "CT0": "REPLACE_ME_CT0"
         },
         "toolTimeout": 30
-      },
-      "nanobot-file-store": {
-        "command": "node",
-        "args": [
-          "/app/services/nanobot-file-store-mcp/dist/index.js"
-        ],
-        "env": {
-          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data"
-        },
-        "toolTimeout": 30
       }
     }
   },
