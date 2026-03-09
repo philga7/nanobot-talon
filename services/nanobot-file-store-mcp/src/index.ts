@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio";
 import { z } from "zod";
