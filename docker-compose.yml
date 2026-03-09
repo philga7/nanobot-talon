@@ -21,7 +21,7 @@ services:
   nanobot-gateway:
     container_name: nanobot-gateway
     <<: *common-config
-    command: ["gateway"]
+    command: ["gateway", "--config", "/root/.nanobot/config.json"]
     restart: unless-stopped
     ports:
       - 18790:18790
