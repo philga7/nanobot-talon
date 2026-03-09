@@ -26,6 +26,10 @@ Web search uses SearXNG when `tools.web.search.searxngBaseUrl` is set (e.g. `htt
 
 Push notifications use a remote ntfy server (e.g. VPS at https://ntfy.informedcrew.com) via the ntfy-me-mcp MCP server. Add `ntfy` to `tools.mcpServers` in NanoBot config with `NTFY_URL`, `NTFY_TOPIC`, and `NTFY_TOKEN`. See [docs/ntfy.md](docs/ntfy.md) for setup.
 
+## bird (X/Twitter Read-Only)
+
+Read X/Twitter profiles and tweets via [@steipete/bird](https://www.npmjs.com/package/@steipete/bird) through the `bird-x-read-mcp` MCP server, which is built into the Docker image. Add `bird` to `tools.mcpServers` with `AUTH_TOKEN` and `CT0` env vars (the MCP command path inside the container is `/app/services/bird-mcp/dist/index.js`). See [docs/bird.md](docs/bird.md) for setup.
+
 ## Key Areas
 
 - `nanobot/agent/`: core loop, prompt/context building, memory seams, tool registry (incl. web_search via SearXNG)

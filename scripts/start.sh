@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Start the Mem0 + SearXNG (optional) + NanoBot stack with health checks.
+# Start the Mem0 + SearXNG (optional) + Dockerized NanoBot (WrenAir) stack with health checks.
 # Run from the project root: ./scripts/start.sh
 
 set -e
@@ -104,5 +104,6 @@ echo "    nanobot-gateway: http://localhost:18790"
 echo ""
 echo "==> Interact with Wren (Dockerized NanoBot)"
 echo "    Single message:  docker compose run --rm nanobot-cli agent -m \"Your question here\""
-echo "    Chat mode:       docker compose run -it --rm nanobot-cli agent"
+echo "    Chat session:    docker compose run -it --rm nanobot-cli agent --session wrenair-one"
+echo "    (bird MCP tools are available via the 'bird_*' tools inside these sessions.)"
 echo ""

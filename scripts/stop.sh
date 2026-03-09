@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Stop the Mem0 + SearXNG + NanoBot stack.
+# Stop the Mem0 + SearXNG + Dockerized NanoBot (WrenAir) stack.
 # Run from the project root: ./scripts/stop.sh
 
 set -e

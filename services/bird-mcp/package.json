@@ -1,0 +1,25 @@
+{
+  "name": "bird-x-read-mcp",
+  "version": "0.1.0",
+  "description": "Read-only X/Twitter MCP server for profiles and tweets via @steipete/bird",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": { "bird-mcp": "dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@steipete/bird": "^0.8.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
