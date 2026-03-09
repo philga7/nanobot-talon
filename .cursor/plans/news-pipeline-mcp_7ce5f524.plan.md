@@ -119,7 +119,7 @@ Design a small set of **high-level, job-centric tools** plus a few **lower-level
   - Summarize the history/dedupe state for a topic or URL.
   - Handy for verifying that `check_news_seen` behavior is working correctly once ported.
 
-These tools will be wired via the MCP SDK similar to how `[services/bird-mcp/src/index.ts](services/bird-mcp/src/index.ts)` registers `bird_*` tools.
+These tools will be wired via the MCP SDK similar to how `[services/bird-mcp/src/index.ts](services/bird-mcp/src/index.ts)` registers `bird_`* tools.
 
 ### Mapping Existing Pipeline Phases to MCP Logic
 
