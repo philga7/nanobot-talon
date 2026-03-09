@@ -9,7 +9,7 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 MEM0_DEPLOY="${MEM0_DEPLOY:-$PROJECT_ROOT/mem0-deploy}"
 SEARXNG_DIR="${SEARXNG_DIR:-$PROJECT_ROOT/searxng}"
 
-echo "==> Stopping NanoBot + talon-mem0-mcp..."
+echo "==> Stopping NanoBot + talon-mem0-mcp (including any MCP servers they spawn, such as bird-x-read-mcp and nanobot-file-store-mcp)..."
 cd "$PROJECT_ROOT"
 docker compose down
 

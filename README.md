@@ -887,6 +887,14 @@ Add MCP servers to your `config.json`:
         "headers": {
           "Authorization": "Bearer xxxxx"
         }
+      },
+      "nanobot-file-store": {
+        "command": "node",
+        "args": ["/app/services/nanobot-file-store-mcp/dist/index.js"],
+        "env": {
+          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data"
+        },
+        "toolTimeout": 30
       }
     }
   }
