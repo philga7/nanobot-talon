@@ -144,5 +144,7 @@ async def connect_mcp_servers(
                 logger.debug("MCP: registered tool '{}' from server '{}'", wrapper.name, name)
 
             logger.info("MCP server '{}': connected, {} tools registered", name, len(tools.tools))
-        except Exception as e:
+        except (Exception, asyncio.CancelledError) as e:
+            # CancelledError can occur when an MCP subprocess crashes: the MCP client cancels
+            # the connection wait; treat it as a connection failure so other servers still connect.
             logger.error("MCP server '{}': failed to connect: {}", name, e)
