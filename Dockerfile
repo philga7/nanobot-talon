@@ -36,12 +36,6 @@ WORKDIR /app/services/bird-mcp
 RUN npm install && npm run build
 WORKDIR /app
 
-# Build the nanobot-file-store MCP server
-COPY services/nanobot-file-store-mcp/ services/nanobot-file-store-mcp/
-WORKDIR /app/services/nanobot-file-store-mcp
-RUN npm install && npm run build
-WORKDIR /app
-
 # Create config directory
 RUN mkdir -p /root/.nanobot
 
