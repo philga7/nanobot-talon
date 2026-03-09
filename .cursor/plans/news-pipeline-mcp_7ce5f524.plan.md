@@ -4,16 +4,16 @@ overview: Design a hybrid `news-pipeline` MCP service for NanoBot that encapsula
 todos:
   - id: scaffold-mcp-service
     content: Scaffold `services/news-pipeline-mcp/` (Node/TypeScript) following the `bird-mcp` pattern and define core TypeScript interfaces for NewsItem, NarrativeSignal, DeliveryPolicy, and JobDefinition.
-    status: pending
+    status: completed
   - id: implement-pipeline-modules
     content: Implement ConfigLoader, CFP scanner, topic search + scoring, commentator narrative collector, HistoryStore, and Senior Analyst Slack formatter within the `news-pipeline-mcp` service.
-    status: pending
+    status: completed
   - id: expose-mcp-tools
     content: Expose `news_run_job`, `news_preview_breaking_news`, `news_get_config`, and `news_get_history_status` as MCP tools using `@modelcontextprotocol/sdk`.
-    status: pending
+    status: completed
   - id: wire-nanobot-config
     content: Add a `newsPipeline` MCP server entry to `~/.nanobot/config.json` and document configuration for stdio and (optionally) HTTP deployments.
-    status: pending
+    status: completed
   - id: validate-vs-current-pipeline
     content: Run dry-run comparisons between the new MCP and the existing OpenClaw pipeline to validate scoring, quiet window behavior, dedupe, and Slack/ntfy delivery semantics per job.
     status: pending
