@@ -13,6 +13,15 @@
       "apiBase": "https://ollama.com/v1"
     }
   },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "REPLACE_ME_TELEGRAM_BOT_TOKEN",
+      "allowFrom": [
+        "REPLACE_ME_TELEGRAM_USER_ID"
+      ]
+    }
+  },
   "gateway": {
     "port": 18792
   },
