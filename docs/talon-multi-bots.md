@@ -87,6 +87,21 @@ In addition, all three example configs now show how to attach three more MCP ser
 
 See `docs/talon-journaling-todos-notes.md` for configuration details and recommended data layouts per bot.
 
+### Compose files per environment
+
+This repository’s `docker-compose.yml` is intended as a **local / WrenAir-oriented template** for running a single NanoBot instance plus its immediate dependencies (Mem0, optional SearXNG, and any local MCP servers). In production, each environment typically has its own compose file:
+
+- **WrenVPS**: runs on a VPS with its own networks, reverse proxy, and service topology. It should:
+  - Use the shared `nanobot` image,
+  - Set an appropriate `NANOBOT_WORKSPACE` (for example `/root/.nanobot-wren-vps/workspace`),
+  - Wire Mem0, SearXNG, journaling/todo/library MCPs, ntfy, etc. to VPS-local hostnames and networks.
+- **WrenAir / WrenPro**: can reuse or copy `docker-compose.yml` from this repo as a starting point, overriding `NANOBOT_WORKSPACE` and adding or removing services as needed.
+
+The key contract across all environments is:
+
+- Each instance has its **own workspace root** (via `agents.defaults.workspace` and/or `NANOBOT_WORKSPACE`).
+- NanoBot connects to MCP servers via `tools.mcpServers` URLs that are valid **inside that instance’s Docker network**, even if the underlying compose files and networks differ between WrenVPS, WrenAir, and WrenPro.
+
 ### Running the instances (containerized)
 
 You can still think in terms of one config per instance, but the configs live in volumes that are mounted into containers.
