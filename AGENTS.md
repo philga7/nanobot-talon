@@ -30,6 +30,16 @@ Push notifications use a remote ntfy server (e.g. VPS at https://ntfy.informedcr
 
 Read X/Twitter profiles and tweets via [@steipete/bird](https://www.npmjs.com/package/@steipete/bird) through the `bird-x-read-mcp` MCP server, which is built into the Docker image. Add `bird` to `tools.mcpServers` with `AUTH_TOKEN` and `CT0` env vars (the MCP command path inside the container is `/app/services/bird-mcp/dist/index.js`). See [docs/bird.md](docs/bird.md) for setup.
 
+## Journaling, Todos, and Notes (Talon)
+
+Talon bots can access journals, markdown-backed todo lists, and Markdown knowledge bases via **external MCP servers**:
+
+- Journaling MCP: `mtct/journaling_mcp`
+- Todo MCP: `danjdewhurst/todo-md-mcp`
+- Library MCP: `lethain/library-mcp`
+
+These run as remote services (often behind an MCP bridge such as `talon-mcp-bridge`) and are wired into NanoBot purely via `tools.mcpServers` in the Talon instance configs. See `docs/talon-journaling-todos-notes.md` and `docs/talon-multi-bots.md` for recommended per-bot layouts and URLs.
+
 ## Key Areas
 
 - `nanobot/agent/`: core loop, prompt/context building, memory seams, tool registry (incl. web_search via SearXNG)
