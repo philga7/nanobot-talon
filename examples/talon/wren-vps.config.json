@@ -55,6 +55,18 @@
           "CT0": "REPLACE_ME_CT0"
         },
         "toolTimeout": 30
+      },
+      "journaling": {
+        "url": "http://talon-mcp-bridge:3001/mcp/journaling",
+        "toolTimeout": 60
+      },
+      "todo-md": {
+        "url": "http://talon-mcp-bridge:3001/mcp/todo-md",
+        "toolTimeout": 30
+      },
+      "library": {
+        "url": "http://talon-mcp-bridge:3001/mcp/library",
+        "toolTimeout": 60
       }
     }
   },

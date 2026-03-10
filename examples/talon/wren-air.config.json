@@ -44,6 +44,18 @@
           "NTFY_URL": "https://ntfy.informedcrew.com",
           "NTFY_TOKEN": "REPLACE_ME_NTFY_TOKEN"
         }
+      },
+      "journaling": {
+        "url": "http://talon-mcp-bridge:3001/mcp/journaling",
+        "toolTimeout": 60
+      },
+      "todo-md": {
+        "url": "http://talon-mcp-bridge:3001/mcp/todo-md",
+        "toolTimeout": 30
+      },
+      "library": {
+        "url": "http://talon-mcp-bridge:3001/mcp/library",
+        "toolTimeout": 60
       }
     }
   },

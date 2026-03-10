@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # Start the Mem0 + SearXNG (optional) + Dockerized NanoBot (WrenAir) stack with health checks.
+# This script assumes any additional MCP servers (ntfy, bird, journaling, todo-md, library, etc.)
+# are reachable via the configured MCP bridge (for example talon-mcp-bridge) and wired into
+# NanoBot via tools.mcpServers in the Talon instance configs.
 # Run from the project root: ./scripts/start.sh
 
 set -e
