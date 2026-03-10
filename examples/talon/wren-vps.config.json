@@ -56,15 +56,17 @@
         },
         "toolTimeout": 30
       },
-      "nanobot-file-store": {
-        "command": "node",
-        "args": [
-          "/app/services/nanobot-file-store-mcp/dist/index.js"
-        ],
-        "env": {
-          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data"
-        },
+      "journaling": {
+        "url": "http://talon-mcp-bridge:3001/mcp/journaling",
+        "toolTimeout": 60
+      },
+      "todo-md": {
+        "url": "http://talon-mcp-bridge:3001/mcp/todo-md",
         "toolTimeout": 30
+      },
+      "library": {
+        "url": "http://talon-mcp-bridge:3001/mcp/library",
+        "toolTimeout": 60
       }
     }
   },

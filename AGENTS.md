@@ -30,30 +30,15 @@ Push notifications use a remote ntfy server (e.g. VPS at https://ntfy.informedcr
 
 Read X/Twitter profiles and tweets via [@steipete/bird](https://www.npmjs.com/package/@steipete/bird) through the `bird-x-read-mcp` MCP server, which is built into the Docker image. Add `bird` to `tools.mcpServers` with `AUTH_TOKEN` and `CT0` env vars (the MCP command path inside the container is `/app/services/bird-mcp/dist/index.js`). See [docs/bird.md](docs/bird.md) for setup.
 
-## File Store (Static Documents)
+## Journaling, Todos, and Notes (Talon)
 
-Use the `nanobot-file-store-mcp` server as a generic, file-backed document store for Talon/Wren workflows (journals, todos/projects, news analysis notes, portfolio snapshots, and future mini apps). It is built into the Docker image at `/app/services/nanobot-file-store-mcp/dist/index.js` and exposes tools like `file_store_read_document`, `file_store_write_document`, `file_store_list_documents`, `file_store_delete_document`, and `file_store_ensure_daily_document`.
+Talon bots can access journals, markdown-backed todo lists, and Markdown knowledge bases via **external MCP servers**:
 
-Configure it under `tools.mcpServers` in `~/.nanobot/config.json`:
+- Journaling MCP: `mtct/journaling_mcp`
+- Todo MCP: `danjdewhurst/todo-md-mcp`
+- Library MCP: `lethain/library-mcp`
 
-```json
-{
-  "tools": {
-    "mcpServers": {
-      "nanobot-file-store": {
-        "command": "node",
-        "args": ["/app/services/nanobot-file-store-mcp/dist/index.js"],
-        "env": {
-          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data"
-        },
-        "toolTimeout": 30
-      }
-    }
-  }
-}
-```
-
-All document-oriented Talon skills should prefer this MCP for CRUD on static files instead of direct filesystem access from the agent.
+These run as remote services (often behind an MCP bridge such as `talon-mcp-bridge`) and are wired into NanoBot purely via `tools.mcpServers` in the Talon instance configs. See `docs/talon-journaling-todos-notes.md` and `docs/talon-multi-bots.md` for recommended per-bot layouts and URLs.
 
 ## Key Areas
 

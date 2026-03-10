@@ -79,6 +79,14 @@ The example `wren-vps.config.json` includes both, with placeholder env values fo
 
 For WrenAir and WrenPro, the example configs also include an `ntfy` MCP entry pointing at the same remote ntfy server. This lets every instance send notifications through a single VPS-hosted ntfy deployment while still keeping their workspaces and Mem0 instances isolated.
 
+In addition, all three example configs now show how to attach three more MCP servers via an HTTP bridge (for example `talon-mcp-bridge`):
+
+- A **journaling MCP** (`mtct/journaling_mcp`) for structured personal and work journaling.
+- A **todo MCP** (`danjdewhurst/todo-md-mcp`) for markdown-backed task lists (`todo.md` per instance).
+- A **library MCP** (`lethain/library-mcp`) for querying large Markdown knowledge bases by tag, text, or date.
+
+See `docs/talon-journaling-todos-notes.md` for configuration details and recommended data layouts per bot.
+
 ### Running the instances (containerized)
 
 You can still think in terms of one config per instance, but the configs live in volumes that are mounted into containers.

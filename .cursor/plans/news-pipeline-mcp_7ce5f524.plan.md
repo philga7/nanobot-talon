@@ -78,7 +78,7 @@ flowchart TD
 
 - **Service root**: `services/news-pipeline-mcp/` (mirrors `services/bird-mcp/` and `services/mem0-mcp/`).
 - **Implementation language** (recommended):
-  - Use **Node/TypeScript + `@modelcontextprotocol/sdk`** for symmetry with `bird-mcp` and the planned `nanobot-file-store-mcp`.
+  - Use **Node/TypeScript + `@modelcontextprotocol/sdk`** for symmetry with `bird-mcp`.
   - Structure:
     - Entry: `[services/news-pipeline-mcp/src/index.ts](services/news-pipeline-mcp/src/index.ts)`
     - Build: `tsc` to `[services/news-pipeline-mcp/dist/index.js](services/news-pipeline-mcp/dist/index.js)`

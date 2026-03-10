@@ -887,14 +887,6 @@ Add MCP servers to your `config.json`:
         "headers": {
           "Authorization": "Bearer xxxxx"
         }
-      },
-      "nanobot-file-store": {
-        "command": "node",
-        "args": ["/app/services/nanobot-file-store-mcp/dist/index.js"],
-        "env": {
-          "OPENCLAW_DATA_ROOT": "/workspace/openclaw-data"
-        },
-        "toolTimeout": 30
       }
     }
   }
@@ -1144,6 +1136,22 @@ SearXNG runs from the [searxng/](searxng/) directory (WrenAir instance). Start i
 ### ntfy (Push Notifications, Talon)
 
 Push notifications use a VPS-hosted ntfy server (e.g. https://ntfy.informedcrew.com) via ntfy-me-mcp. Add the ntfy MCP server to `tools.mcpServers` with `NTFY_URL`, `NTFY_TOPIC`, and `NTFY_TOKEN`. See [docs/ntfy.md](docs/ntfy.md) for setup.
+
+### Journaling, Todos, and Notes (Talon)
+
+Talon deployments can attach three additional MCP servers to give all bots access to:
+
+- **Journals** — via `mtct/journaling_mcp`
+- **Markdown-backed todos** — via `danjdewhurst/todo-md-mcp`
+- **Markdown knowledge bases** — via `lethain/library-mcp`
+
+These MCP servers typically run as remote HTTP endpoints (for example behind an MCP bridge such as `talon-mcp-bridge`) and are wired into each Talon instance via `tools.mcpServers` in the config. The example configs under `examples/talon/` (`wren-vps.config.json`, `wren-air.config.json`, `wren-pro.config.json`) show how to point at bridge URLs like:
+
+- `http://talon-mcp-bridge:3001/mcp/journaling`
+- `http://talon-mcp-bridge:3001/mcp/todo-md`
+- `http://talon-mcp-bridge:3001/mcp/library`
+
+See `docs/talon-journaling-todos-notes.md` for details on recommended data roots (journal directories, `todo.md` locations, and note library paths) per bot.
 
 ### Docker
 
