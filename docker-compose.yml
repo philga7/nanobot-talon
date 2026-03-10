@@ -4,6 +4,10 @@ x-common-config: &common-config
     dockerfile: Dockerfile
   volumes:
     - ~/.nanobot:/root/.nanobot
+  environment:
+    # Default workspace inside the container; override NANOBOT_WORKSPACE per environment
+    # (e.g. /Users/you/.nanobot/workspace for WrenAir, /root/.nanobot-wren-vps/workspace for WrenVPS)
+    - NANOBOT_WORKSPACE=${NANOBOT_WORKSPACE:-/root/.nanobot/workspace}
 
 services:
   talon-mem0-mcp:
@@ -25,6 +29,8 @@ services:
     restart: unless-stopped
     ports:
       - 18790:18790
+    networks:
+      - mcp-net
     depends_on:
       - talon-mem0-mcp
     deploy:
@@ -43,3 +49,47 @@ services:
     command: ["status"]
     stdin_open: true
     tty: true
+
+  journaling-mcp:
+    build:
+      context: ./servers/journaling_mcp
+      dockerfile: Dockerfile.journaling
+    restart: unless-stopped
+    environment:
+      - JOURNAL_DIR=/data/journal
+    volumes:
+      - ~/.nanobot/workspace/journal:/data/journal
+    ports:
+      - "3010:3010"
+    networks:
+      - mcp-net
+
+  todo-md-mcp:
+    build:
+      context: ./servers/todo-md-mcp
+      dockerfile: Dockerfile.todo
+    restart: unless-stopped
+    environment:
+      - TODO_FILE_PATH=/data/todo/todo.md
+    volumes:
+      - ~/.nanobot/workspace/todos:/data/todo
+    ports:
+      - "3011:3011"
+    networks:
+      - mcp-net
+
+  library-mcp:
+    build:
+      context: ./servers/library-mcp
+      dockerfile: Dockerfile.library
+    restart: unless-stopped
+    volumes:
+      - ~/.nanobot/workspace/library:/data/library  # ← typo fixed
+    ports:
+      - "3012:3012"
+    networks:
+      - mcp-net
+
+networks:
+  mcp-net:
+    driver: bridge

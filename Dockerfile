@@ -36,8 +36,9 @@ WORKDIR /app/services/bird-mcp
 RUN npm install && npm run build
 WORKDIR /app
 
-# Create config directory
+# Create config directory and set default workspace env (can be overridden)
 RUN mkdir -p /root/.nanobot
+ENV NANOBOT_WORKSPACE=/root/.nanobot/workspace
 
 # Gateway default port
 EXPOSE 18790
