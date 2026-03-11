@@ -36,6 +36,12 @@ WORKDIR /app/services/bird-mcp
 RUN npm install && npm run build
 WORKDIR /app
 
+# Build news-pipeline-mcp
+COPY services/news-pipeline-mcp/ services/news-pipeline-mcp/
+WORKDIR /app/services/news-pipeline-mcp
+RUN npm install && npm run build
+WORKDIR /app
+
 # Create config directory and set default workspace env (can be overridden)
 RUN mkdir -p /root/.nanobot
 ENV NANOBOT_WORKSPACE=/root/.nanobot/workspace
