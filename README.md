@@ -1092,6 +1092,16 @@ docker compose logs -f nanobot-gateway                   # view logs
 docker compose down                                      # stop
 ```
 
+By default, the Docker image exposes a `NANOBOT_WORKSPACE` environment variable inside the container (default `/root/.nanobot/workspace`). In `docker-compose.yml`, you can override this per environment:
+
+```yaml
+x-common-config: &common-config
+  environment:
+    - NANOBOT_WORKSPACE=${NANOBOT_WORKSPACE:-/root/.nanobot/workspace}
+```
+
+Set `NANOBOT_WORKSPACE` in your shell before `docker compose up` to point at the appropriate workspace root for that environment (for example `/Users/you/.nanobot/workspace` for WrenAir, `/root/.nanobot-wren-vps/workspace` for WrenVPS) and keep configs, Mem0, and tools aligned.
+
 ### Mem0 Remote Memory (Talon)
 
 When using Mem0 for long-term memory, start the full stack with:
