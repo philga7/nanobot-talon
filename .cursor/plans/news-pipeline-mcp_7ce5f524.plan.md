@@ -1,34 +1,35 @@
 ---
 name: news-pipeline-mcp
-overview: Design a hybrid `news-pipeline` MCP service for NanoBot that encapsulates your existing OpenClaw news workflow (breaking news, intel signals, GA sweeps, etc.), reuses your directory structure where practical, and exposes structured tools with per-job delivery policies for Slack and ntfy.
+overview: Implementation subplan for the `news-pipeline-mcp` compute service in the Four-Part AI Newsroom architecture. See `.cursor/plans/four-part-ai-newsroom-plan.md` for the full multi-MCP newsroom design.
 todos:
   - id: scaffold-mcp-service
     content: Scaffold `services/news-pipeline-mcp/` (Node/TypeScript) following the `bird-mcp` pattern and define core TypeScript interfaces for NewsItem, NarrativeSignal, DeliveryPolicy, and JobDefinition.
-    status: pending
+    status: completed
   - id: implement-pipeline-modules
     content: Implement ConfigLoader, CFP scanner, topic search + scoring, commentator narrative collector, HistoryStore, and Senior Analyst Slack formatter within the `news-pipeline-mcp` service.
-    status: pending
+    status: completed
   - id: expose-mcp-tools
     content: Expose `news_run_job`, `news_preview_breaking_news`, `news_get_config`, and `news_get_history_status` as MCP tools using `@modelcontextprotocol/sdk`.
-    status: pending
+    status: completed
   - id: wire-nanobot-config
     content: Add a `newsPipeline` MCP server entry to `~/.nanobot/config.json` and document configuration for stdio and (optionally) HTTP deployments.
-    status: pending
+    status: completed
   - id: validate-vs-current-pipeline
     content: Run dry-run comparisons between the new MCP and the existing OpenClaw pipeline to validate scoring, quiet window behavior, dedupe, and Slack/ntfy delivery semantics per job.
     status: pending
 isProject: false
 ---
 
-## News-Pipeline MCP Design
+## News-Pipeline MCP Design (Implementation Subplan)
 
 ### Goals & Scope
 
-- **Primary goal**: Translate the current OpenClaw news pipeline (breaking news, intel signals, GA sweeps, etc.) into a **single `news-pipeline` MCP server** that NanoBot can call, while:
-  - Reusing the `~/.openclaw` directory structure and job concepts where it’s clearly helpful.
-  - Making room for **light refactors** (e.g., clearer config schemas, better history handling) where they provide obvious, low-friction improvements.
-  - Preserving your **scoring model, quiet window behavior, dedupe/history, and Senior Analyst output format**.
-- **Delivery model**: The MCP always returns **structured results**, and **per-job delivery policy** decides whether NanoBot auto-posts to Slack/ntfy or surfaces results for review.
+- **Primary goal**: Implement the `news-pipeline-mcp` compute engine described in the Four-Part AI Newsroom plan:
+  - Scans CFP for BREAKING/LIVE badges and runs SearXNG topic searches.
+  - Scores and dedupes stories against `news_history.json` / `georgia_news_history.json`.
+  - Formats output as Senior Analyst Slack bullets.
+  - Returns structured results, delivery policy, and suggested actions, but never posts to Slack/ntfy itself.
+  - Reads config from `OPENCLAW_BASE_DIR` and defers orchestration, journaling, and queues to other MCPs and agents.
 
 ### High-Level Architecture
 
@@ -204,42 +205,21 @@ These tools will be wired via the MCP SDK similar to how `[services/bird-mcp/src
       - `ntfy` MCP (for high-priority alerts to `https://ntfy.informedcrew.com/cipher-notifications`).
     - For `previewOnly` or `returnOnly`, agents show results to you instead.
 
-### NanoBot Integration
+### NanoBot & Slack Integration
 
 - **Configuring MCP server**
-  - Add a new MCP server entry in `~/.nanobot/config.json` under `tools.mcpServers` (patterned after `bird`):
-    - **stdio variant (Node process inside same container)**:
-
-```json
-      {
-        "tools": {
-          "mcpServers": {
-            "newsPipeline": {
-              "command": "node",
-              "args": ["/app/services/news-pipeline-mcp/dist/index.js"],
-              "env": {
-                "OPENCLAW_BASE_DIR": "/root/.openclaw",
-                "SEARXNG_BASE_URL": "http://searxng:8080",
-                "X_AUTH_TOKEN": "...",
-                "X_CT0": "..."
-              },
-              "toolTimeout": 60
-            }
-          }
-        }
-      }
-      
-
-```
+  - Add a new MCP server entry in `~/.nanobot/config.json` under `tools.mcpServers` (patterned after `bird`), as shown in the Four-Part AI Newsroom plan.
 
 - **Tool names in NanoBot**
-  - After connection, tools will appear as `mcp_newsPipeline_news_run_job`, `mcp_newsPipeline_news_preview_breaking_news`, etc., via `MCPToolWrapper` in `[nanobot/agent/tools/mcp.py](nanobot/agent/tools/mcp.py)`.
+  - After connection, tools will appear as `mcp_newsPipeline_news_run_job`, `mcp_newsPipeline_news_preview_breaking_news`, etc., via `MCPToolWrapper` in `nanobot/agent/tools/mcp.py`.
   - Agents and channels can then:
     - Use `news_preview_breaking_news` for interactive runs.
     - Use `news_run_job` in scheduled flows.
+
 - **Scheduling & agent responsibilities**
   - For jobs currently run by `analyst` vs `main (Cipher)`, capture that as metadata in `cron/jobs.json` (e.g., `owner: "analyst" | "cipher"`).
   - The NanoBot gateway/agents for those workspaces call `news_run_job(jobId)` according to their schedules and apply `deliveryPolicy`.
+  - Slack channel routing, control channels (e.g. `#wren-ops`, `#news-review`), and cron schedules follow the separate `slack-channel-implementation-plan` (see `Cron Job → Channel Routing Reference`).
 
 ### Backwards Compatibility & Data Migration
 

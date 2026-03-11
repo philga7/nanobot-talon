@@ -1,0 +1,26 @@
+{
+  "name": "news-pipeline-mcp",
+  "version": "0.1.0",
+  "description": "News and intel orchestration MCP server for OpenClaw/NanoBot",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "news-pipeline-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "typescript": "^5.4.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
