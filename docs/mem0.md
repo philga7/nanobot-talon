@@ -12,6 +12,19 @@ When Mem0 is enabled, long-term memory is stored in Mem0 (PostgreSQL + pgvector 
 
 See [mem0_remote_mcp_plan.md](../.cursor/plans/mem0_remote_mcp_plan.md) for the full architecture. For long-term retention, offloading, and planning, see [memory-management.md](memory-management.md).
 
+### How Mem0 Interacts With NanoBot Memory
+
+- **With Mem0 disabled**:
+  - NanoBot uses its upstream **token-based `MemoryConsolidator`** to summarize/archive old turns.
+  - Session history is the primary working memory; `workspace/memory/MEMORY.md` is treated as **read-only compatibility input**.
+- **With Mem0 enabled** (`mem0.enabled: true`):
+  - NanoBot **disables internal `MemoryConsolidator`** and defers durable memory to Mem0.
+  - `MEMORY.md` and `HISTORY.md` remain read-only; built-in file tools refuse writes/edits to these paths.
+  - The agent:
+    - Calls Mem0's `/recall` (via MCP) before each turn when `autoRecall` is enabled.
+    - Calls Mem0's `/capture` after each turn when `autoCapture` is enabled.
+  - This keeps NanoBot's working memory (session context) separate from Mem0's **long-term, cross-bot knowledge graph**.
+
 ---
 
 ## Starting

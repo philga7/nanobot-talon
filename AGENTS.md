@@ -11,8 +11,22 @@ Current roadmap and branch plan live in `.cursor/plans/talon_fork_phases_e4896c1
 - Keep the fork rebase-friendly and close to upstream NanoBot.
 - Prefer config-gated seams over broad Talon-only branches in the code.
 - Preserve session history as NanoBot's working memory.
-- When Mem0 is disabled, treat `workspace/memory/MEMORY.md` as read-only compatibility input. When Mem0 is enabled, memory is managed remotely; NanoBot does not write to MEMORY.md or HISTORY.md.
+- When Mem0 is disabled, use NanoBot's upstream **token-window `MemoryConsolidator`** for session history and treat `workspace/memory/MEMORY.md` as read-only compatibility input.
+- When Mem0 is enabled, long-term memory is managed remotely via Mem0 and its MCP tools; NanoBot disables internal consolidation and does not write to `MEMORY.md` or `HISTORY.md`.
 - Prefer remote MCP services over baking Talon integrations into NanoBot core.
+
+## Upstream Alignment (Memory, Tools, Channels)
+
+- The Talon fork tracks upstream NanoBot's redesigned **agent loop**:
+  - Uses provider-owned generation settings and `chat_with_retry`.
+  - Uses `MemoryConsolidator` for token-based consolidation **only** when Mem0 is off.
+  - Layers Mem0 auto-recall/auto-capture on top via an MCP client when enabled.
+- Filesystem tools are based on upstream's `_FsTool` with:
+  - Paginated, line-numbered `read_file`.
+  - Fuzzy, context-aware `edit_file`.
+  - Directory listing with recursion and common ignore patterns.
+- When Mem0 is enabled, filesystem tools are configured to **block writes/edits** to `memory/MEMORY.md` and `memory/HISTORY.md`, enforcing Mem0 as the durable store.
+- Channel wiring uses upstream's **auto-discovered registry**, with Talon-specific behavior (e.g. Matrix workspace restriction) added via constructor/config seams rather than hard-forks.
 
 ## Mem0 Remote Memory
 
